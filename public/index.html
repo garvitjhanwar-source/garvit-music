@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Garvit Music</title>
     
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/727/727218.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2402/2402462.png">
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
@@ -17,20 +18,23 @@
         .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #333; justify-content: space-between; }
         
         .left-section { display: flex; align-items: center; gap: 20px; flex: 1; }
+        
+        /* BRAND STYLING */
         .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 20px; letter-spacing: -0.5px; }
-        .brand img { width: 32px; height: 32px; } 
+        .brand img { width: 34px; height: 34px; } 
+        /* Optional: Text color Red? Uncomment below to make text red too */
+        /* .brand { color: #ff0000; } */
 
         .search-container { position: relative; width: 100%; max-width: 500px; }
         .search-input { width: 100%; padding: 12px; background: #222; border: 1px solid transparent; color: white; border-radius: 25px; font-size: 16px; outline: none; padding-left: 20px; transition: 0.3s; }
-        .search-input:focus { background: #000; border-color: #555; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); }
+        .search-input:focus { background: #000; border-color: #ff0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); } /* Red glow */
         .loading-spinner { position: absolute; right: 15px; top: 10px; display: none; }
         
-        /* USER PROFILE STYLES */
         .user-profile { display: flex; align-items: center; gap: 10px; min-width: 140px; justify-content: flex-end; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: none; object-fit: cover; border: 2px solid #333; }
         .user-name { font-size: 14px; font-weight: 500; display: none; }
         .logout-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 11px; display: none; transition: 0.2s; margin-left: 5px; }
-        .logout-btn:hover { background: #333; color: white; border-color: white; }
+        .logout-btn:hover { background: #ff0000; color: white; border-color: #ff0000; }
 
         .main-content { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding-bottom: 120px; }
         
@@ -50,14 +54,16 @@
         .btn { background: none; border: none; color: #ddd; cursor: pointer; transition: 0.2s; }
         .btn:hover { color: white; transform: scale(1.1); }
         .play-btn { background: white; color: black; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
-        .play-btn:hover { transform: scale(1.1); color: black; }
+        .play-btn:hover { transform: scale(1.1); background: #ff0000; color: white; } /* Red Play Button */
+        
         .progress-area { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 11px; color: #aaa; }
         .progress-bar { flex: 1; height: 4px; background: #444; cursor: pointer; position: relative; border-radius: 2px; }
-        .progress-fill { height: 100%; background: white; width: 0%; border-radius: 2px; }
+        /* RED PROGRESS BAR */
+        .progress-fill { height: 100%; background: #ff0000; width: 0%; border-radius: 2px; box-shadow: 0 0 10px #ff0000; } 
         
         #hidden-player { position: fixed; bottom: 90px; right: 20px; width: 320px; height: 180px; z-index: 50; background: black; border: 2px solid #333; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); transition: 0.3s; }
-        #hidden-player:hover { width: 360px; height: 202px; border-color: #fff; }
-        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 16px; height: 16px; animation: spin 1s linear infinite; }
+        #hidden-player:hover { width: 360px; height: 202px; border-color: #ff0000; }
+        .spinner { border: 3px solid rgba(255,0,0,0.3); border-radius: 50%; border-top: 3px solid #ff0000; width: 16px; height: 16px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -66,7 +72,7 @@
     <div class="top-bar">
         <div class="left-section">
             <a href="/" class="brand">
-                <img src="https://cdn-icons-png.flaticon.com/512/727/727218.png" alt="Logo">
+                <img src="https://cdn-icons-png.flaticon.com/512/2402/2402462.png" alt="Logo">
                 Garvit Music
             </a>
             <div class="search-container">
@@ -121,13 +127,10 @@
     <div id="hidden-player"></div>
 
     <script>
-        // --- 1. MEMORY LOGIC (LOCAL STORAGE) ---
-        
-        // Run this immediately when the page loads
+        // --- 1. MEMORY LOGIC ---
         window.onload = function() {
             const savedUser = localStorage.getItem('garvit_user');
             if (savedUser) {
-                // If we found a user in memory, show them immediately
                 const user = JSON.parse(savedUser);
                 showLoggedInState(user);
             }
@@ -135,37 +138,24 @@
 
         function handleCredentialResponse(response) {
             const payload = decodeJwtResponse(response.credential);
-            
-            // Save user to memory!
-            const user = {
-                name: payload.given_name,
-                pic: payload.picture
-            };
+            const user = { name: payload.given_name, pic: payload.picture };
             localStorage.setItem('garvit_user', JSON.stringify(user));
-
             showLoggedInState(user);
         }
 
         function showLoggedInState(user) {
-            // Hide Google Button
             document.getElementById('googleBtnWrapper').style.display = 'none';
-            
-            // Show User Info
             const pic = document.getElementById('userPic');
             pic.src = user.pic;
             pic.style.display = 'block';
-
             const name = document.getElementById('userName');
             name.innerText = user.name; 
             name.style.display = 'block';
-
             document.getElementById('logoutBtn').style.display = 'block';
         }
 
         function logout() {
-            // Delete memory
             localStorage.removeItem('garvit_user');
-            // Refresh page to reset
             location.reload(); 
         }
 
@@ -191,23 +181,17 @@
         async function doSearch(query) {
             if(!query) return;
             loader.style.display = 'block';
-            
             try {
-                // Using Piped API for speed
                 const res = await fetch(`https://pipedapi.kavin.rocks/search?q=${query}&filter=music_songs`);
                 const data = await res.json();
-                
                 const songs = data.items.map(item => ({
                     id: item.url.split('v=')[1],
                     title: item.title,
                     artist: item.uploaderName,
                     cover: item.thumbnail
                 }));
-
                 render(songs);
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) { console.error(err); }
             loader.style.display = 'none';
         }
 
@@ -246,33 +230,4 @@
             if(!isPlayerReady) return;
             document.getElementById('title').innerText = song.title;
             document.getElementById('artist').innerText = song.artist;
-            document.getElementById('art').src = song.cover;
-            player.loadVideoById(song.id);
-            player.playVideo();
-        }
-        function togglePlay() {
-            if(!player) return;
-            player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo();
-        }
-        let interval;
-        function startLoop() {
-            clearInterval(interval);
-            interval = setInterval(() => {
-                if(!player || !player.getCurrentTime) return;
-                const c = player.getCurrentTime(), d = player.getDuration();
-                if(d > 0) {
-                    document.getElementById('fill').style.width = (c/d)*100 + '%';
-                    document.getElementById('curTime').innerText = fmt(c);
-                    document.getElementById('durTime').innerText = fmt(d);
-                }
-            }, 500);
-        }
-        function stopLoop() { clearInterval(interval); }
-        function fmt(s) { return Math.floor(s/60) + ":" + (Math.floor(s%60)<10?"0":"") + Math.floor(s%60); }
-        function seek(e) {
-            const rect = e.target.getBoundingClientRect();
-            player.seekTo(player.getDuration() * ((e.clientX - rect.left) / rect.width), true);
-        }
-    </script>
-</body>
-</html>
+            document.getElementById('art').src = song.
