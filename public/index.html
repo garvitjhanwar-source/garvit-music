@@ -6,18 +6,19 @@
     
     <title>Garvit Music</title>
     
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/727/727218.png">
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
         body { background: #030303; color: white; font-family: 'Roboto', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* HEADER & BRANDING */
-        .top-bar { padding: 20px; background: #121212; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #333; }
+        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #333; }
         
-        /* 2. LOGO STYLE */
-        .brand { display: flex; align-items: center; font-size: 22px; font-weight: bold; letter-spacing: -1px; color: white; text-decoration: none; }
-        .brand i { color: #ff0000; font-size: 32px; margin-right: 8px; }
+        /* 2. FIXED: LOGO STYLING */
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 20px; letter-spacing: -0.5px; }
+        .brand img { width: 32px; height: 32px; } 
 
         .search-input { flex: 1; max-width: 500px; padding: 12px; background: #222; border: none; color: white; border-radius: 4px; font-size: 16px; outline: none; }
         .search-input:focus { background: #000; border: 1px solid #555; }
@@ -61,9 +62,11 @@
 
     <div class="top-bar">
         <a href="/" class="brand">
-            <i class="material-icons">equalizer</i> Garvit Music
+            <img src="https://cdn-icons-png.flaticon.com/512/727/727218.png" alt="Logo">
+            Garvit Music
         </a>
-        <input type="text" id="search" class="search-input" placeholder="Search on Garvit Music...">
+
+        <input type="text" id="search" class="search-input" placeholder="Search songs...">
         <span id="status" style="color: #aaa; font-size: 14px;"></span>
     </div>
 
@@ -126,7 +129,6 @@
             }
         }
 
-        // Search Logic
         const searchInput = document.getElementById('search');
         const resultsDiv = document.getElementById('results');
         let timer;
