@@ -3,26 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>Garvit Music</title>
     
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/727/727218.png">
-
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
         body { background: #030303; color: white; font-family: 'Roboto', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #333; }
+        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #333; justify-content: space-between; }
         
-        /* 2. FIXED: LOGO STYLING */
+        .left-section { display: flex; align-items: center; gap: 20px; flex: 1; }
         .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 20px; letter-spacing: -0.5px; }
         .brand img { width: 32px; height: 32px; } 
 
-        .search-input { flex: 1; max-width: 500px; padding: 12px; background: #222; border: none; color: white; border-radius: 4px; font-size: 16px; outline: none; }
+        .search-input { width: 100%; max-width: 400px; padding: 12px; background: #222; border: none; color: white; border-radius: 4px; font-size: 16px; outline: none; }
         .search-input:focus { background: #000; border: 1px solid #555; }
         
+        /* LOGIN BUTTON STYLES */
+        .user-profile { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: none; }
+        .user-name { font-size: 14px; font-weight: 500; display: none; }
+        .logout-btn { background: none; border: 1px solid #555; color: #aaa; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; display: none; }
+        .logout-btn:hover { border-color: white; color: white; }
+
         .main-content { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding-bottom: 120px; }
         
         .card { background: #181818; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
@@ -32,45 +39,52 @@
         .card p { font-size: 12px; color: #aaa; margin: 0; }
         
         .player-bar { position: fixed; bottom: 0; width: 100%; height: 80px; background: #212121; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; justify-content: space-between; z-index: 100; }
-        
         .song-info { display: flex; align-items: center; width: 30%; }
         .song-info img { width: 50px; height: 50px; margin-right: 15px; background: #333; border-radius: 4px; }
         .info-text h3 { font-size: 14px; margin: 0; margin-bottom: 4px; }
         .info-text p { font-size: 12px; color: #aaa; margin: 0; }
-
         .controls { display: flex; flex-direction: column; align-items: center; width: 40%; }
         .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
         .btn { background: none; border: none; color: #ddd; cursor: pointer; transition: 0.2s; }
         .btn:hover { color: white; }
         .play-btn { background: white; color: black; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
         .play-btn:hover { transform: scale(1.1); color: black; }
-        
         .progress-area { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 11px; color: #aaa; }
         .progress-bar { flex: 1; height: 4px; background: #444; cursor: pointer; position: relative; border-radius: 2px; }
         .progress-fill { height: 100%; background: white; width: 0%; border-radius: 2px; }
-        .progress-bar:hover .progress-fill { background: #ff0000; }
-
-        #hidden-player {
-            position: fixed; bottom: 90px; right: 20px; width: 320px; height: 180px;
-            z-index: 50; background: black; border: 2px solid #333; border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6); transition: 0.3s;
-        }
+        
+        #hidden-player { position: fixed; bottom: 90px; right: 20px; width: 320px; height: 180px; z-index: 50; background: black; border: 2px solid #333; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); transition: 0.3s; }
         #hidden-player:hover { width: 360px; height: 202px; border-color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <a href="/" class="brand">
-            <img src="https://cdn-icons-png.flaticon.com/512/727/727218.png" alt="Logo">
-            Garvit Music
-        </a>
+        <div class="left-section">
+            <a href="/" class="brand">
+                <img src="https://cdn-icons-png.flaticon.com/512/727/727218.png" alt="Logo">
+                Garvit Music
+            </a>
+            <input type="text" id="search" class="search-input" placeholder="Search songs...">
+        </div>
 
-        <input type="text" id="search" class="search-input" placeholder="Search songs...">
-        <span id="status" style="color: #aaa; font-size: 14px;"></span>
+        <div class="user-profile">
+            <div id="g_id_onload"
+                 data-client_id="1008834040580-n0hmhrtr6cmho2prg3i992hq5l77lpd7.apps.googleusercontent.com" 
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_black" data-text="signin_with" data-size="medium"></div>
+            
+            <img id="userPic" class="user-avatar" src="">
+            <span id="userName" class="user-name"></span>
+            <button id="logoutBtn" class="logout-btn" onclick="logout()">Sign Out</button>
+        </div>
     </div>
 
-    <div class="main-content" id="results"></div>
+    <div class="main-content" id="results">
+        <h2 style="grid-column: 1/-1; text-align: center; margin-top: 50px; color: #444;">Search for a song to start listening...</h2>
+    </div>
 
     <footer class="player-bar">
         <div class="song-info">
@@ -80,20 +94,15 @@
                 <p id="artist">...</p>
             </div>
         </div>
-
         <div class="controls">
             <div class="buttons">
                 <button class="btn"><i class="material-icons">skip_previous</i></button>
-                <button class="btn play-btn" onclick="togglePlay()">
-                    <i class="material-icons" id="playIcon">play_arrow</i>
-                </button>
+                <button class="btn play-btn" onclick="togglePlay()"><i class="material-icons" id="playIcon">play_arrow</i></button>
                 <button class="btn"><i class="material-icons">skip_next</i></button>
             </div>
             <div class="progress-area">
                 <span id="curTime">0:00</span>
-                <div class="progress-bar" onclick="seek(event)">
-                    <div class="progress-fill" id="fill"></div>
-                </div>
+                <div class="progress-bar" onclick="seek(event)"><div class="progress-fill" id="fill"></div></div>
                 <span id="durTime">0:00</span>
             </div>
         </div>
@@ -103,8 +112,45 @@
     <div id="hidden-player"></div>
 
     <script>
-        var player, isPlayerReady = false;
+        // --- GOOGLE LOGIN LOGIC ---
+        function handleCredentialResponse(response) {
+            // Decode the Google ID Token (it's base64 encoded)
+            const responsePayload = decodeJwtResponse(response.credential);
 
+            console.log("ID: " + responsePayload.sub);
+            console.log('Name: ' + responsePayload.name);
+            console.log('Image URL: ' + responsePayload.picture);
+            
+            // UI Update
+            document.querySelector('.g_id_signin').style.display = 'none'; // Hide button
+            
+            const pic = document.getElementById('userPic');
+            pic.src = responsePayload.picture;
+            pic.style.display = 'block';
+
+            const name = document.getElementById('userName');
+            name.innerText = responsePayload.given_name; // Just first name
+            name.style.display = 'block';
+
+            document.getElementById('logoutBtn').style.display = 'block';
+        }
+
+        function logout() {
+            // Simple UI reset (Real logout needs backend session clearing)
+            location.reload(); 
+        }
+
+        function decodeJwtResponse(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        // --- PLAYER LOGIC (Standard) ---
+        var player, isPlayerReady = false;
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -113,58 +159,42 @@
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('hidden-player', {
                 height: '100%', width: '100%',
-                events: { 'onReady': onPlayerReady, 'onStateChange': onStateChange }
+                events: { 'onReady': () => isPlayerReady = true, 'onStateChange': onStateChange }
             });
         }
-
-        function onPlayerReady() { isPlayerReady = true; player.setVolume(100); }
-        
         function onStateChange(event) {
             if (event.data == YT.PlayerState.PLAYING) {
-                document.getElementById('playIcon').innerText = 'pause';
-                startLoop();
+                document.getElementById('playIcon').innerText = 'pause'; startLoop();
             } else {
-                document.getElementById('playIcon').innerText = 'play_arrow';
-                stopLoop();
+                document.getElementById('playIcon').innerText = 'play_arrow'; stopLoop();
             }
         }
-
+        
+        // Search
         const searchInput = document.getElementById('search');
         const resultsDiv = document.getElementById('results');
         let timer;
-
         searchInput.addEventListener('input', (e) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => doSearch(e.target.value), 800);
+            clearTimeout(timer); timer = setTimeout(() => doSearch(e.target.value), 800);
         });
-
         async function doSearch(query) {
             if(!query) return;
-            document.getElementById('status').innerText = "Searching...";
-            
             try {
                 const res = await fetch(`/api/search?q=${query}`);
                 const data = await res.json();
                 render(data);
-                document.getElementById('status').innerText = `Found ${data.length} results`;
             } catch(err) { console.error(err); }
         }
-
         function render(songs) {
             resultsDiv.innerHTML = '';
             songs.forEach(song => {
                 const div = document.createElement('div');
                 div.className = 'card';
                 div.onclick = () => playSong(song);
-                div.innerHTML = `
-                    <img src="${song.cover}" onerror="this.src='https://via.placeholder.com/150'">
-                    <h3>${song.title}</h3>
-                    <p>${song.artist}</p>
-                `;
+                div.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
                 resultsDiv.appendChild(div);
             });
         }
-
         function playSong(song) {
             if(!isPlayerReady) return;
             document.getElementById('title').innerText = song.title;
@@ -172,39 +202,28 @@
             document.getElementById('art').src = song.cover;
             player.loadVideoById(song.id);
         }
-
         function togglePlay() {
             if(!player) return;
-            const state = player.getPlayerState();
-            if(state === 1) player.pauseVideo();
-            else player.playVideo();
+            player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo();
         }
-
         let interval;
         function startLoop() {
             clearInterval(interval);
             interval = setInterval(() => {
                 if(!player || !player.getCurrentTime) return;
-                const c = player.getCurrentTime();
-                const d = player.getDuration();
+                const c = player.getCurrentTime(), d = player.getDuration();
                 if(d > 0) {
-                    const p = (c / d) * 100;
-                    document.getElementById('fill').style.width = p + '%';
+                    document.getElementById('fill').style.width = (c/d)*100 + '%';
                     document.getElementById('curTime').innerText = fmt(c);
                     document.getElementById('durTime').innerText = fmt(d);
                 }
             }, 500);
         }
         function stopLoop() { clearInterval(interval); }
-        function fmt(s) { 
-            const m = Math.floor(s/60);
-            const sec = Math.floor(s%60);
-            return m + ":" + (sec < 10 ? "0" : "") + sec;
-        }
+        function fmt(s) { return Math.floor(s/60) + ":" + (Math.floor(s%60)<10?"0":"") + Math.floor(s%60); }
         function seek(e) {
             const rect = e.target.getBoundingClientRect();
-            const p = (e.clientX - rect.left) / rect.width;
-            player.seekTo(player.getDuration() * p, true);
+            player.seekTo(player.getDuration() * ((e.clientX - rect.left) / rect.width), true);
         }
     </script>
 </body>
