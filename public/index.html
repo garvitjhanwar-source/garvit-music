@@ -32,7 +32,6 @@
         
         /* SEARCH OVERLAY */
         .search-overlay { display: none; flex: 1; align-items: center; gap: 10px; width: 100%; animation: fadeIn 0.2s ease-in-out; }
-        /* Form makes 'Enter' key work */
         .search-form { flex: 1; position: relative; display: flex; align-items: center; } 
         .search-input { width: 100%; padding: 12px; background: #222; border: 1px solid #333; color: white; border-radius: 25px; font-size: 16px; outline: none; padding-left: 20px; transition: 0.3s; }
         .search-input:focus { background: #000; border-color: #ff0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
@@ -41,9 +40,13 @@
         .close-search-btn { background: none; border: none; color: #aaa; cursor: pointer; padding: 8px; border-radius: 50%; }
         .close-search-btn:hover { background: #222; color: white; }
 
+        /* VISIBILITY TOGGLE */
         .top-bar.searching .brand, .top-bar.searching .user-profile, .top-bar.searching .search-trigger { display: none; }
         .top-bar.searching .search-overlay { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* SEARCH STATUS TEXT */
+        #searchStatus { font-size: 12px; color: #ff0000; margin-top: 5px; text-align: center; display: none; }
 
         /* MAIN CONTENT */
         .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; }
@@ -61,6 +64,8 @@
         .dial-card { height: 80px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; padding: 0 20px; font-size: 18px; font-weight: bold; background: #222; border: 1px solid #333; overflow: hidden; }
         .dial-card:hover { transform: scale(1.02); border-color: #fff; }
         .user-dial { background: linear-gradient(135deg, #1e1e1e, #3a3a3a); border-left: 5px solid #ff0000; }
+        
+        /* Discover Colors */
         .dial-1 { background: linear-gradient(135deg, #8E2DE2, #4A00E0); }
         .dial-2 { background: linear-gradient(135deg, #FF512F, #DD2476); }
         .dial-3 { background: linear-gradient(135deg, #11998e, #38ef7d); }
@@ -113,11 +118,13 @@
         <div class="search-overlay">
             <button class="close-search-btn" onclick="closeSearch()"><i class="material-icons">arrow_back</i></button>
             <form class="search-form" onsubmit="handleSearchSubmit(event)">
-                <input type="text" id="search" class="search-input" placeholder="Search for songs...">
+                <input type="text" id="search" class="search-input" placeholder="Search song/artist..." autocomplete="off">
                 <div id="loader" class="loading-spinner spinner"></div>
             </form>
         </div>
     </div>
+
+    <div id="searchStatus"></div>
 
     <div class="main-content" id="mainArea">
         <div id="librarySection" class="speed-dial-container">
@@ -168,25 +175,29 @@
         }
         function closeSearch() {
             document.getElementById('topBar').classList.remove('searching');
+            document.getElementById('searchStatus').style.display = 'none';
         }
 
-        // --- 2. SEARCH ENGINE (WITH FAILOVER) ---
+        // --- 2. MULTI-SERVER SEARCH ENGINE ---
         const searchInput = document.getElementById('search');
         const resultsDiv = document.getElementById('results');
         const speedDialDiv = document.getElementById('speedDial');
         const libraryDiv = document.getElementById('librarySection');
         const loader = document.getElementById('loader');
+        const statusText = document.getElementById('searchStatus');
         let timer;
         
-        // List of APIs to try in order (if one fails, try next)
+        // ROBUST SERVER LIST (The "Loop" List)
         const apiList = [
             "https://pipedapi.kavin.rocks",
+            "https://api.piped.spot.im",
+            "https://pipedapi.drgns.space",
             "https://api-piped.mha.fi",
-            "https://pipedapi.tokhmi.xyz"
+            "https://piped-api.garudalinux.org"
         ];
 
         function handleSearchSubmit(e) {
-            e.preventDefault(); // Stop page reload
+            e.preventDefault(); 
             doSearch(searchInput.value);
         }
 
@@ -198,7 +209,7 @@
 
         searchInput.addEventListener('input', (e) => {
             clearTimeout(timer); 
-            timer = setTimeout(() => doSearch(e.target.value), 600);
+            timer = setTimeout(() => doSearch(e.target.value), 800); // Increased delay to prevent spamming
         });
 
         async function doSearch(query) {
@@ -206,36 +217,50 @@
                 speedDialDiv.style.display = 'block';
                 libraryDiv.style.display = 'block';
                 resultsDiv.innerHTML = '';
+                statusText.style.display = 'none';
                 return;
             }
+
+            // Prepare UI
             speedDialDiv.style.display = 'none';
             libraryDiv.style.display = 'none';
             loader.style.display = 'block';
-            
-            // Try APIs one by one
+            statusText.style.display = 'block';
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            // THE LOOP
             let success = false;
             for (const api of apiList) {
                 try {
+                    statusText.innerText = `Connecting to server: ${api.split('//')[1]}...`;
+                    
                     const res = await fetch(`${api}/search?q=${query}&filter=music_songs`);
-                    if(!res.ok) throw new Error("API Error");
+                    if(!res.ok) throw new Error("Server blocked request");
                     
                     const data = await res.json();
+                    if(!data.items || data.items.length === 0) throw new Error("No items found");
+
                     const songs = data.items.map(item => ({
                         id: item.url.split('v=')[1],
                         title: item.title,
                         artist: item.uploaderName,
                         cover: item.thumbnail
                     }));
+                    
                     render(songs);
                     success = true;
-                    break; // Stop loop if successful
+                    statusText.style.display = 'none'; // Hide status on success
+                    break; // STOP LOOP if it works
+
                 } catch(err) {
-                    console.log(`Failed with ${api}, trying next...`);
+                    console.warn(`Failed ${api}:`, err);
+                    // Loop continues to next server automatically
                 }
             }
 
             if(!success) {
-                resultsDiv.innerHTML = '<p style="text-align:center; padding:20px;">⚠️ Search failed. Servers are busy. Try again.</p>';
+                statusText.innerText = "All servers are busy. Please wait 10 seconds and try again.";
+                resultsDiv.innerHTML = '<div style="text-align:center; padding:30px; color:#aaa;">⚠️ Search Failed. <br>Try a different keyword or wait a moment.</div>';
             }
             loader.style.display = 'none';
         }
