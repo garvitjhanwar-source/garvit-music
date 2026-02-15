@@ -3,385 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garvit Music</title>
-    
+    <title>Garvit Music Cloud</title>
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2402/2402462.png">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
-        /* BASE STYLES */
+        /* SAME STYLES AS BEFORE */
         body { background: #030303; color: white; font-family: 'Roboto', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* TOP BAR */
-        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; height: 60px; box-sizing: border-box; gap: 15px; }
-        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: white; font-weight: bold; font-size: 20px; letter-spacing: -0.5px; white-space: nowrap; }
-        .brand img { width: 34px; height: 34px; } 
-        .search-trigger { background: none; border: none; color: white; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; }
-        .search-trigger:hover { background: #222; color: #ff0000; }
-        
-        /* USER PROFILE */
-        .user-profile { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; justify-content: space-between; height: 60px; border-bottom: 1px solid #333; }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 20px; color: white; text-decoration: none; }
+        .brand img { width: 34px; height: 34px; }
+        .user-profile { display: flex; align-items: center; gap: 10px; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: none; object-fit: cover; border: 2px solid #333; }
-        .user-name { font-size: 14px; font-weight: 500; display: none; white-space: nowrap; }
-        .logout-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 11px; display: none; margin-left: 5px; }
+        .logout-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 11px; display: none; }
         
-        /* SEARCH OVERLAY */
-        .search-overlay { display: none; flex: 1; align-items: center; gap: 10px; width: 100%; animation: fadeIn 0.2s ease-in-out; }
-        .search-form { flex: 1; position: relative; display: flex; align-items: center; } 
-        .search-input { width: 100%; padding: 12px; background: #222; border: 1px solid #333; color: white; border-radius: 25px; font-size: 16px; outline: none; padding-left: 20px; transition: 0.3s; }
-        .search-input:focus { background: #000; border-color: #ff0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
-        .loading-spinner { position: absolute; right: 15px; top: 12px; display: none; pointer-events: none; }
-        .close-search-btn { background: none; border: none; color: #aaa; cursor: pointer; padding: 8px; border-radius: 50%; }
-        .top-bar.searching .brand, .top-bar.searching .user-profile, .top-bar.searching .search-trigger { display: none; }
-        .top-bar.searching .search-overlay { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-
-        #searchStatus { font-size: 12px; color: #aaa; margin-top: 5px; text-align: center; display: none; padding-bottom: 5px; }
-
-        /* MAIN AREA */
+        /* SEARCH & MAIN */
+        .search-container { flex: 1; display: flex; justify-content: center; margin: 0 20px; }
+        .search-input { width: 100%; max-width: 500px; padding: 10px 20px; background: #222; border: 1px solid #333; color: white; border-radius: 25px; outline: none; }
         .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         
-        /* CARDS & BUTTONS */
+        /* CARDS */
         .card { background: #181818; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; }
         .card:hover { background: #282828; transform: translateY(-5px); }
-        .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; margin-bottom: 10px; background: #333; }
-        .card h3 { font-size: 14px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+        .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
+        .card h3 { font-size: 14px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .card p { font-size: 12px; color: #aaa; margin: 0; }
-
-        /* ACTION BUTTON (ADD / DELETE) */
-        .card-action-btn {
-            position: absolute; top: 20px; right: 20px; width: 35px; height: 35px; border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7); color: white; border: 1px solid rgba(255,255,255,0.2);
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            opacity: 0; transform: translateY(10px); transition: all 0.2s ease; z-index: 10;
-        }
-        .card:hover .card-action-btn { opacity: 1; transform: translateY(0); }
-        .card-action-btn:hover { transform: scale(1.1); background: #ff0000; border-color: #ff0000; }
-        .delete-mode:hover { background: #D50000 !important; border-color: #D50000 !important; }
-
-        /* LIBRARY */
-        .speed-dial-container { margin-top: 10px; margin-bottom: 40px; }
-        .section-title { font-size: 22px; font-weight: bold; margin-bottom: 15px; color: #fff; border-left: 4px solid #ff0000; padding-left: 10px; }
-        .speed-dial-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .dial-card { height: 80px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; padding: 0 20px; font-size: 18px; font-weight: bold; background: #222; border: 1px solid #333; overflow: hidden; }
-        .dial-card:hover { transform: scale(1.02); border-color: #fff; }
-        .user-dial { background: linear-gradient(135deg, #1e1e1e, #3a3a3a); border-left: 5px solid #ff0000; }
-        .dial-1 { background: linear-gradient(135deg, #8E2DE2, #4A00E0); } .dial-2 { background: linear-gradient(135deg, #FF512F, #DD2476); }
-        .dial-3 { background: linear-gradient(135deg, #11998e, #38ef7d); } .dial-4 { background: linear-gradient(135deg, #C33764, #1D2671); }
-
-        /* PLAYER BAR */
-        .player-bar { position: fixed; bottom: 0; width: 100%; height: 80px; background: #212121; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; justify-content: space-between; z-index: 100; }
-        .song-info { display: flex; align-items: center; width: 30%; }
-        .song-info img { width: 50px; height: 50px; margin-right: 15px; background: #333; border-radius: 4px; }
-        .info-text h3 { font-size: 14px; margin: 0; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-        .info-text p { font-size: 12px; color: #aaa; margin: 0; }
-        .controls { display: flex; flex-direction: column; align-items: center; width: 40%; }
-        .buttons { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
-        .btn { background: none; border: none; color: #ddd; cursor: pointer; transition: 0.2s; }
-        .btn:hover { color: white; transform: scale(1.1); }
-        .play-btn { background: white; color: black; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
-        .play-btn:hover { transform: scale(1.1); background: #ff0000; color: white; }
-        .progress-area { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 11px; color: #aaa; }
-        .progress-bar { flex: 1; height: 4px; background: #444; cursor: pointer; position: relative; border-radius: 2px; }
-        .progress-fill { height: 100%; background: #ff0000; width: 0%; border-radius: 2px; } 
         
-        #hidden-player { position: fixed; bottom: 90px; right: 20px; width: 320px; height: 180px; z-index: 50; background: black; border: 2px solid #333; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); transition: 0.3s; }
-        #hidden-player:hover { width: 360px; height: 202px; border-color: #ff0000; }
-        .spinner { border: 3px solid rgba(255,0,0,0.3); border-radius: 50%; border-top: 3px solid #ff0000; width: 16px; height: 16px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* BUTTONS */
+        .action-btn { position: absolute; top: 20px; right: 20px; width: 35px; height: 35px; border-radius: 50%; background: rgba(0,0,0,0.7); color: white; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: 0.2s; }
+        .card:hover .action-btn { opacity: 1; }
+        .action-btn:hover { background: #ff0000; border-color: #ff0000; transform: scale(1.1); }
+        
+        /* LIBRARY */
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .lib-card { height: 60px; background: #222; border-radius: 8px; display: flex; align-items: center; padding: 0 20px; font-weight: bold; cursor: pointer; border-left: 4px solid #ff0000; }
+        
+        /* PLAYER */
+        .player-bar { position: fixed; bottom: 0; width: 100%; height: 90px; background: #212121; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
+        #hidden-player { position: fixed; bottom: 100px; right: 20px; width: 200px; height: 112px; z-index: -1; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar" id="topBar">
-        <a href="/" class="brand">
-            <img src="https://cdn-icons-png.flaticon.com/512/2402/2402462.png" alt="Logo">
-            Garvit Music
-        </a>
-        <button class="search-trigger" onclick="openSearch()" title="Search">
-            <i class="material-icons">search</i>
-        </button>
-        <div class="user-profile">
-            <div id="googleBtnWrapper">
-                <div id="g_id_onload" data-client_id="1008834040580-n0hmhrtr6cmho2prg3i992hq5l77lpd7.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
-                <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_black" data-text="signin_with" data-size="medium"></div>
-            </div>
-            <img id="userPic" class="user-avatar" src="">
-            <span id="userName" class="user-name"></span>
-            <button id="logoutBtn" class="logout-btn" onclick="logout()">Sign Out</button>
+    <div class="top-bar">
+        <a href="/" class="brand"><img src="https://cdn-icons-png.flaticon.com/512/2402/2402462.png"> Garvit Cloud</a>
+        <div class="search-container">
+            <input type="text" id="search" class="search-input" placeholder="Search song/artist..." onkeydown="if(event.key==='Enter') doSearch(this.value)">
         </div>
-
-        <div class="search-overlay">
-            <button class="close-search-btn" onclick="closeSearch()"><i class="material-icons">arrow_back</i></button>
-            <form class="search-form" onsubmit="handleSearchSubmit(event)">
-                <input type="text" id="search" class="search-input" placeholder="Search song/artist..." autocomplete="off">
-                <div id="loader" class="loading-spinner spinner"></div>
-            </form>
+        <div class="user-profile">
+            <div id="googleBtn"></div>
+            <img id="userPic" class="user-avatar">
+            <span id="userName" style="font-size:14px; display:none;"></span>
+            <button id="logoutBtn" class="logout-btn" onclick="logout()">Sign Out</button>
         </div>
     </div>
 
-    <div id="searchStatus"></div>
-
-    <div class="main-content" id="mainArea">
-        <div id="librarySection" class="speed-dial-container">
-            <div class="section-title">Your Library</div>
-            <div class="speed-dial-grid" id="libraryGrid"></div>
-        </div>
-        <div id="speedDial" class="speed-dial-container">
-            <div class="section-title">Discover</div>
-            <div class="speed-dial-grid">
-                <div class="dial-card dial-1" onclick="quickSearch('Trending Music India')">🔥 Trending</div>
-                <div class="dial-card dial-2" onclick="quickSearch('Punjabi Hits 2024')">👳 Punjabi Hits</div>
-                <div class="dial-card dial-3" onclick="quickSearch('Lofi Beats')">☕ Lofi Beats</div>
-                <div class="dial-card dial-4" onclick="quickSearch('Gym Workout Music')">💪 Gym Mode</div>
-            </div>
-        </div>
+    <div class="main-content">
+        <h2 id="libTitle">Your Library</h2>
+        <div id="libraryGrid" class="library-grid"></div>
+        <h2 id="resultsTitle" style="display:none">Search Results</h2>
         <div id="results" class="results-grid"></div>
     </div>
 
     <footer class="player-bar">
-        <div class="song-info">
-            <img id="art" src="">
-            <div class="info-text"><h3 id="title">Select a song</h3><p id="artist">...</p></div>
+        <div style="width:30%">
+            <h3 id="pTitle" style="font-size:14px; margin:0;">Select a song</h3>
+            <p id="pArtist" style="font-size:12px; color:#aaa; margin:0;">...</p>
         </div>
-        <div class="controls">
-            <div class="buttons">
-                <button class="btn"><i class="material-icons">skip_previous</i></button>
-                <button class="btn play-btn" onclick="togglePlay()"><i class="material-icons" id="playIcon">play_arrow</i></button>
-                <button class="btn"><i class="material-icons">skip_next</i></button>
-            </div>
-            <div class="progress-area">
-                <span id="curTime">0:00</span>
-                <div class="progress-bar" onclick="seek(event)"><div class="progress-fill" id="fill"></div></div>
-                <span id="durTime">0:00</span>
-            </div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button onclick="togglePlay()" style="background:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;">▶</button>
         </div>
         <div style="width:30%"></div>
     </footer>
-
+    
     <div id="hidden-player"></div>
 
     <script>
-        // --- UI LOGIC ---
-        function openSearch() {
-            document.getElementById('topBar').classList.add('searching');
-            setTimeout(() => document.getElementById('search').focus(), 100); 
-        }
-        function closeSearch() {
-            document.getElementById('topBar').classList.remove('searching');
-            document.getElementById('searchStatus').style.display = 'none';
-        }
-
-        // --- SEARCH ENGINE ---
-        const searchInput = document.getElementById('search');
-        const resultsDiv = document.getElementById('results');
-        const speedDialDiv = document.getElementById('speedDial');
-        const libraryDiv = document.getElementById('librarySection');
-        const loader = document.getElementById('loader');
-        const statusText = document.getElementById('searchStatus');
-        let timer;
+        // --- DATA MANAGEMENT (CLOUD) ---
+        let currentUser = null; // Stores { email, name, playlists }
         
-        function handleSearchSubmit(e) { e.preventDefault(); doSearch(searchInput.value); }
-        function quickSearch(term) { openSearch(); searchInput.value = term; doSearch(term); }
-        searchInput.addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => doSearch(e.target.value), 800); });
+        // 1. Google Login Callback
+        async function handleCredentialResponse(response) {
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            
+            // Send user to server to Log In / Create Account
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: payload.email,
+                    name: payload.name,
+                    picture: payload.picture
+                })
+            });
 
-        async function doSearch(query) {
-            if(!query) {
-                speedDialDiv.style.display = 'block';
-                libraryDiv.style.display = 'block';
-                resultsDiv.innerHTML = '';
-                statusText.style.display = 'none';
-                return;
-            }
-            speedDialDiv.style.display = 'none';
-            libraryDiv.style.display = 'none';
-            loader.style.display = 'block';
-            statusText.style.display = 'block';
-            statusText.innerText = "Searching...";
-            resultsDiv.innerHTML = ''; 
-
-            try {
-                const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
-                const data = await res.json();
-                
-                if(data.error) throw new Error(data.error);
-
-                const songs = data.items.map(item => ({
-                    id: item.url ? item.url.split('v=')[1] : item.id,
-                    title: item.title,
-                    artist: item.uploaderName,
-                    cover: item.thumbnail
-                }));
-                
-                render(songs);
-                statusText.style.display = 'none';
-            } catch(err) {
-                console.warn(err);
-                statusText.innerText = "No results found. Try a different search.";
-            }
-            loader.style.display = 'none';
+            currentUser = await res.json();
+            showLoggedInUI();
+            renderLibrary();
         }
 
-        // --- RENDER SEARCH RESULTS (With Add Button) ---
-        function render(songs) {
-            resultsDiv.innerHTML = '';
-            songs.forEach(song => {
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.onclick = () => playSong(song);
+        function showLoggedInUI() {
+            document.getElementById('googleBtn').style.display = 'none';
+            document.getElementById('userPic').src = currentUser.picture;
+            document.getElementById('userPic').style.display = 'block';
+            document.getElementById('userName').innerText = currentUser.name;
+            document.getElementById('userName').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'block';
+        }
 
-                // Add Button
-                const addBtn = document.createElement('button');
-                addBtn.className = 'card-action-btn';
-                addBtn.innerHTML = '<i class="material-icons">add</i>';
-                addBtn.title = "Add to Playlist";
-                addBtn.onclick = (e) => {
-                    e.stopPropagation(); 
-                    addToPlaylist(song);
-                };
-
-                div.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
-                div.appendChild(addBtn);
-                resultsDiv.appendChild(div);
+        // 2. Save Changes to Cloud
+        async function saveUserData() {
+            if(!currentUser) return;
+            await fetch('/api/playlists', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: currentUser.email,
+                    playlists: currentUser.playlists
+                })
             });
+            renderLibrary(); // Refresh UI
+        }
+
+        // --- SEARCH ---
+        async function doSearch(query) {
+            document.getElementById('resultsTitle').style.display = 'block';
+            document.getElementById('results').innerHTML = '<div style="color:#aaa">Searching...</div>';
+            
+            const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            
+            const div = document.getElementById('results');
+            div.innerHTML = '';
+            
+            if(data.items) {
+                data.items.forEach(song => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.onclick = () => playSong(song);
+                    
+                    // Add Button
+                    const btn = document.createElement('button');
+                    btn.className = 'action-btn';
+                    btn.innerHTML = '+';
+                    btn.onclick = (e) => { e.stopPropagation(); addToPlaylist(song); };
+                    
+                    el.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
+                    el.appendChild(btn);
+                    div.appendChild(el);
+                });
+            }
         }
 
         // --- PLAYLIST LOGIC ---
-        let currentSong = null;
-        function getPlaylists() { return JSON.parse(localStorage.getItem('garvit_playlists') || '{}'); }
-
         function addToPlaylist(song) {
-            let name = prompt(`Add "${song.title}" to which playlist?`, "Favorites");
+            if(!currentUser) { alert("Please sign in to save music!"); return; }
+            
+            const name = prompt("Add to playlist:", "Favorites");
             if(!name) return;
 
-            const playlists = getPlaylists();
-            if(!playlists[name]) playlists[name] = [];
+            if(!currentUser.playlists[name]) currentUser.playlists[name] = [];
             
-            if(!playlists[name].find(s => s.id === song.id)) {
-                playlists[name].push(song);
-                localStorage.setItem('garvit_playlists', JSON.stringify(playlists));
-                renderLibrary();
-                alert(`Added to ${name}!`);
-            } else {
-                alert("Song already in playlist!");
+            // Check duplicate
+            if(!currentUser.playlists[name].find(s => s.id === song.id)) {
+                currentUser.playlists[name].push(song);
+                saveUserData(); // Sync to Cloud
+                alert(`Added to ${name}`);
             }
         }
 
-        function removeFromPlaylist(playlistName, songId) {
-            const playlists = getPlaylists();
-            if(!confirm("Remove this song?")) return;
-            
-            playlists[playlistName] = playlists[playlistName].filter(song => song.id !== songId);
-            localStorage.setItem('garvit_playlists', JSON.stringify(playlists));
-            openPlaylist(playlistName); // Refresh view
+        function removeFromPlaylist(pName, sId) {
+            if(confirm("Remove song?")) {
+                currentUser.playlists[pName] = currentUser.playlists[pName].filter(s => s.id !== sId);
+                saveUserData(); // Sync to Cloud
+                openPlaylist(pName); // Refresh view
+            }
         }
 
         function renderLibrary() {
             const grid = document.getElementById('libraryGrid');
-            const playlists = getPlaylists();
             grid.innerHTML = '';
-            
-            if(Object.keys(playlists).length === 0) {
-                grid.innerHTML = '<div style="color:#666; font-size:14px; padding:10px;">Search for a song and click (+) to start a playlist.</div>';
-                return;
-            }
+            if(!currentUser) return;
 
-            Object.keys(playlists).forEach(name => {
-                const div = document.createElement('div');
-                div.className = 'dial-card user-dial';
-                div.innerHTML = `<i class="material-icons">queue_music</i> ${name}`;
-                div.onclick = () => openPlaylist(name);
-                div.oncontextmenu = (e) => {
-                    e.preventDefault();
-                    if(confirm(`Delete playlist "${name}"?`)) {
-                        delete playlists[name];
-                        localStorage.setItem('garvit_playlists', JSON.stringify(playlists));
-                        renderLibrary();
-                    }
-                };
-                grid.appendChild(div);
+            Object.keys(currentUser.playlists).forEach(name => {
+                const el = document.createElement('div');
+                el.className = 'lib-card';
+                el.innerHTML = `<span>${name}</span> <span style="margin-left:auto; font-size:12px; color:#888">${currentUser.playlists[name].length} songs</span>`;
+                el.onclick = () => openPlaylist(name);
+                grid.appendChild(el);
             });
         }
 
         function openPlaylist(name) {
-            const playlists = getPlaylists();
-            document.getElementById('speedDial').style.display = 'none';
-            document.getElementById('librarySection').style.display = 'none';
-            
-            resultsDiv.innerHTML = `
-                <div style="grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
-                    <div><h2 style="margin:0;">📂 ${name}</h2><span style="font-size:12px; color:#aaa;">${playlists[name].length} songs</span></div>
-                    <button onclick="location.reload()" style="background:#333; color:white; border:none; padding:8px 16px; border-radius:20px; cursor:pointer;">Close</button>
-                </div>
-            `;
-            
-            playlists[name].forEach(song => {
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.onclick = () => playSong(song);
+            const div = document.getElementById('results');
+            document.getElementById('resultsTitle').innerText = `📂 ${name}`;
+            document.getElementById('resultsTitle').style.display = 'block';
+            div.innerHTML = '';
 
-                // Delete Button (Red)
-                const delBtn = document.createElement('button');
-                delBtn.className = 'card-action-btn delete-mode';
-                delBtn.style.background = 'rgba(200, 0, 0, 0.8)';
-                delBtn.innerHTML = '<i class="material-icons">delete</i>';
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    removeFromPlaylist(name, song.id);
-                };
+            currentUser.playlists[name].forEach(song => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.onclick = () => playSong(song);
+                
+                // Delete Button
+                const btn = document.createElement('button');
+                btn.className = 'action-btn';
+                btn.innerHTML = '🗑️';
+                btn.style.background = '#d00';
+                btn.onclick = (e) => { e.stopPropagation(); removeFromPlaylist(name, song.id); };
 
-                div.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
-                div.appendChild(delBtn);
-                resultsDiv.appendChild(div);
+                el.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
+                el.appendChild(btn);
+                div.appendChild(el);
             });
         }
 
-        // --- AUTH & PLAYER ---
-        window.onload = function() {
-            const savedUser = localStorage.getItem('garvit_user');
-            if (savedUser) { showLoggedInState(JSON.parse(savedUser)); }
-            renderLibrary();
-        };
-        function handleCredentialResponse(response) {
-            const payload = decodeJwtResponse(response.credential);
-            const user = { name: payload.given_name, pic: payload.picture };
-            localStorage.setItem('garvit_user', JSON.stringify(user));
-            showLoggedInState(user);
-        }
-        function showLoggedInState(user) {
-            document.getElementById('googleBtnWrapper').style.display = 'none';
-            document.getElementById('userPic').src = user.pic;
-            document.getElementById('userPic').style.display = 'block';
-            document.getElementById('userName').innerText = user.name; 
-            document.getElementById('userName').style.display = 'block';
-            document.getElementById('logoutBtn').style.display = 'block';
-        }
-        function logout() { localStorage.removeItem('garvit_user'); location.reload(); }
-        function decodeJwtResponse(token) { return JSON.parse(decodeURIComponent(window.atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))); }
+        function logout() { location.reload(); }
 
-        var player, isPlayerReady = false;
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        function onYouTubeIframeAPIReady() { player = new YT.Player('hidden-player', { events: { 'onReady': () => isPlayerReady = true, 'onStateChange': onStateChange } }); }
-        function onStateChange(event) { document.getElementById('playIcon').innerText = event.data == YT.PlayerState.PLAYING ? 'pause' : 'play_arrow'; event.data == YT.PlayerState.PLAYING ? startLoop() : stopLoop(); }
+        // --- PLAYER (Standard YouTube API) ---
+        var player;
+        window.onload = function() {
+            google.accounts.id.initialize({ client_id: "YOUR_GOOGLE_CLIENT_ID", callback: handleCredentialResponse });
+            google.accounts.id.renderButton(document.getElementById("googleBtn"), { theme: "filled_black", size: "large" });
+            
+            var tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.body.appendChild(tag);
+        };
+        function onYouTubeIframeAPIReady() { player = new YT.Player('hidden-player', { height: '100', width: '200' }); }
         function playSong(song) {
-            currentSong = song;
-            document.getElementById('title').innerText = song.title;
-            document.getElementById('artist').innerText = song.artist;
-            document.getElementById('art').src = song.cover;
-            if(isPlayerReady) { player.loadVideoById(song.id); player.playVideo(); }
+            document.getElementById('pTitle').innerText = song.title;
+            document.getElementById('pArtist').innerText = song.artist;
+            if(player) { player.loadVideoById(song.id); player.playVideo(); }
         }
-        function togglePlay() { if(player) player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
-        let interval;
-        function startLoop() { clearInterval(interval); interval = setInterval(() => { if(player && player.getCurrentTime) { const c = player.getCurrentTime(), d = player.getDuration(); document.getElementById('fill').style.width = (c/d)*100 + '%'; document.getElementById('curTime').innerText = fmt(c); document.getElementById('durTime').innerText = fmt(d); } }, 500); }
-        function stopLoop() { clearInterval(interval); }
-        function fmt(s) { return Math.floor(s/60) + ":" + (Math.floor(s%60)<10?"0":"") + Math.floor(s%60); }
-        function seek(e) { const rect = e.target.getBoundingClientRect(); player.seekTo(player.getDuration() * ((e.clientX - rect.left) / rect.width), true); }
+        function togglePlay() { 
+            if(player.getPlayerState() == 1) player.pauseVideo(); else player.playVideo(); 
+        }
     </script>
 </body>
 </html>
