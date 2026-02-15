@@ -14,16 +14,24 @@
         /* --- BASE STYLES --- */
         body { background: #030303; color: white; font-family: 'Roboto', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* --- TOP BAR --- */
-        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; justify-content: space-between; height: 60px; border-bottom: 1px solid #333; box-sizing: border-box; }
-        .brand { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 20px; color: white; text-decoration: none; }
+        /* --- TOP BAR (Clean with Icons) --- */
+        .top-bar { padding: 15px 20px; background: #121212; display: flex; align-items: center; justify-content: space-between; height: 60px; border-bottom: 1px solid #333; box-sizing: border-box; position: relative; }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 20px; color: white; text-decoration: none; z-index: 10; }
         .brand img { width: 34px; height: 34px; }
         
-        .search-container { flex: 1; display: flex; justify-content: center; margin: 0 20px; }
-        .search-input { width: 100%; max-width: 500px; padding: 10px 20px; background: #222; border: 1px solid #333; color: white; border-radius: 25px; outline: none; transition: 0.3s; }
-        .search-input:focus { border-color: #ff0000; background: #000; }
+        /* Search Trigger Icon */
+        .search-trigger { background: none; border: none; color: white; cursor: pointer; padding: 10px; border-radius: 50%; transition: 0.2s; z-index: 10; }
+        .search-trigger:hover { background: #222; color: #ff0000; }
 
-        .user-profile { display: flex; align-items: center; gap: 10px; min-width: 140px; justify-content: flex-end; }
+        /* Search Overlay (Hidden by default) */
+        .search-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #121212; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; z-index: 20; transform: translateY(-100%); transition: transform 0.3s ease; }
+        .search-overlay.active { transform: translateY(0); }
+        .search-input { flex: 1; padding: 12px; background: #222; border: 1px solid #333; color: white; border-radius: 25px; font-size: 16px; outline: none; padding-left: 20px; margin: 0 10px; }
+        .search-input:focus { border-color: #ff0000; background: #000; }
+        .close-search { background: none; border: none; color: #aaa; cursor: pointer; padding: 10px; }
+        .close-search:hover { color: white; }
+
+        .user-profile { display: flex; align-items: center; gap: 10px; z-index: 10; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: none; object-fit: cover; border: 2px solid #333; }
         .logout-btn { background: #222; border: 1px solid #333; color: #aaa; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 11px; display: none; }
         
@@ -43,7 +51,7 @@
         .dial-4 { background: linear-gradient(135deg, #C33764, #1D2671); }
         .user-dial { background: linear-gradient(135deg, #1e1e1e, #3a3a3a); border-left: 5px solid #ff0000; }
 
-        /* --- SEARCH RESULTS & CARDS --- */
+        /* --- CARDS --- */
         .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         .card { background: #181818; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; }
         .card:hover { background: #282828; transform: translateY(-5px); }
@@ -78,21 +86,32 @@
             <img src="https://cdn-icons-png.flaticon.com/512/2402/2402462.png" alt="Logo">
             Garvit Music
         </a>
-        <div class="search-container">
-            <input type="text" id="search" class="search-input" placeholder="Search song/artist..." autocomplete="off">
-        </div>
+        
+        <button class="search-trigger" onclick="toggleSearchUI(true)">
+            <i class="material-icons">search</i>
+        </button>
+
         <div class="user-profile">
-            <div id="googleBtn"></div> <img id="userPic" class="user-avatar" src="">
+            <div id="googleBtn"></div>
+            <img id="userPic" class="user-avatar" src="">
             <span id="userName" style="font-size:14px; display:none; margin-right:10px;"></span>
             <button id="logoutBtn" class="logout-btn" onclick="logout()">Sign Out</button>
+        </div>
+
+        <div class="search-overlay" id="searchOverlay">
+            <button class="close-search" onclick="toggleSearchUI(false)">
+                <i class="material-icons">arrow_back</i>
+            </button>
+            <input type="text" id="search" class="search-input" placeholder="Search song/artist..." autocomplete="off">
         </div>
     </div>
 
     <div class="main-content" id="mainArea">
         
-        <div id="librarySection" class="speed-dial-container" style="display:none;">
+        <div id="librarySection" class="speed-dial-container">
             <div class="section-title">Your Library</div>
-            <div class="speed-dial-grid" id="libraryGrid"></div>
+            <div class="speed-dial-grid" id="libraryGrid">
+                </div>
         </div>
 
         <div id="speedDial" class="speed-dial-container">
@@ -117,7 +136,8 @@
         <div class="controls">
             <button class="play-btn" onclick="togglePlay()"><i class="material-icons" id="playIcon">play_arrow</i></button>
         </div>
-        <div style="width:30%"></div> </footer>
+        <div style="width:30%"></div>
+    </footer>
 
     <div id="hidden-player"></div>
 
@@ -127,21 +147,33 @@
         const searchInput = document.getElementById('search');
         let timer;
 
-        // --- SEARCH LOGIC ---
+        // --- SEARCH UI LOGIC ---
+        function toggleSearchUI(show) {
+            const overlay = document.getElementById('searchOverlay');
+            if (show) {
+                overlay.classList.add('active');
+                setTimeout(() => searchInput.focus(), 300);
+            } else {
+                overlay.classList.remove('active');
+                if(!searchInput.value) resetView(); // Only reset if empty
+            }
+        }
+
         searchInput.addEventListener('input', (e) => { 
             clearTimeout(timer); 
-            if(!e.target.value) { resetView(); return; }
+            if(!e.target.value) { return; }
             timer = setTimeout(() => doSearch(e.target.value), 800); 
         });
         
         function quickSearch(term) {
+            toggleSearchUI(true);
             searchInput.value = term;
             doSearch(term);
         }
 
         function resetView() {
             document.getElementById('speedDial').style.display = 'block';
-            document.getElementById('librarySection').style.display = currentUser ? 'block' : 'none';
+            document.getElementById('librarySection').style.display = 'block';
             document.getElementById('results').innerHTML = '';
             document.getElementById('resultsTitle').style.display = 'none';
         }
@@ -149,7 +181,7 @@
         async function doSearch(query) {
             if(!query) return;
             
-            // Hide Speed Dials
+            // Hide Home elements
             document.getElementById('speedDial').style.display = 'none';
             document.getElementById('librarySection').style.display = 'none';
             
@@ -190,7 +222,35 @@
             }
         }
 
-        // --- DATABASE / AUTH LOGIC ---
+        // --- HYBRID DATA MANAGEMENT (Local + Cloud) ---
+        
+        // 1. Get Data (Handles both modes)
+        function getStoredPlaylists() {
+            if (currentUser && currentUser.playlists) {
+                return currentUser.playlists; // Cloud
+            } else {
+                return JSON.parse(localStorage.getItem('garvit_playlists') || '{}'); // Local
+            }
+        }
+
+        // 2. Save Data (Handles both modes)
+        async function saveStoredPlaylists(playlists) {
+            if (currentUser) {
+                // Save to Cloud
+                currentUser.playlists = playlists;
+                await fetch('/api/playlists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentUser.email, playlists: playlists })
+                });
+            } else {
+                // Save to Browser
+                localStorage.setItem('garvit_playlists', JSON.stringify(playlists));
+            }
+            renderLibrary();
+        }
+
+        // --- AUTH LOGIC ---
         function handleCredentialResponse(response) {
             const payload = JSON.parse(atob(response.credential.split('.')[1]));
             fetch('/api/login', {
@@ -202,6 +262,7 @@
             .then(user => {
                 currentUser = user;
                 showLoggedInUI();
+                // Merge local playlists to cloud? (Advanced step, skipping for simplicity)
                 renderLibrary();
             });
         }
@@ -213,28 +274,18 @@
             document.getElementById('userName').innerText = currentUser.name;
             document.getElementById('userName').style.display = 'block';
             document.getElementById('logoutBtn').style.display = 'block';
-            document.getElementById('librarySection').style.display = 'block'; // Show library
-        }
-
-        async function saveUserData() {
-            if(!currentUser) return;
-            await fetch('/api/playlists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: currentUser.email, playlists: currentUser.playlists })
-            });
-            renderLibrary();
         }
 
         function addToPlaylist(song) {
-            if(!currentUser) { alert("Please sign in to save music!"); return; }
             const name = prompt("Add to playlist:", "Favorites");
             if(!name) return;
-            if(!currentUser.playlists[name]) currentUser.playlists[name] = [];
+
+            let playlists = getStoredPlaylists();
+            if(!playlists[name]) playlists[name] = [];
             
-            if(!currentUser.playlists[name].find(s => s.id === song.id)) {
-                currentUser.playlists[name].push(song);
-                saveUserData();
+            if(!playlists[name].find(s => s.id === song.id)) {
+                playlists[name].push(song);
+                saveStoredPlaylists(playlists); // Saves to Cloud or Local automatically
                 alert(`Added to ${name}!`);
             } else {
                 alert("Song already in playlist!");
@@ -243,28 +294,33 @@
 
         function removeFromPlaylist(pName, sId) {
             if(confirm("Remove this song?")) {
-                currentUser.playlists[pName] = currentUser.playlists[pName].filter(s => s.id !== sId);
-                saveUserData();
+                let playlists = getStoredPlaylists();
+                playlists[pName] = playlists[pName].filter(s => s.id !== sId);
+                saveStoredPlaylists(playlists);
                 openPlaylist(pName); // Refresh view
             }
         }
 
         function renderLibrary() {
             const grid = document.getElementById('libraryGrid');
+            const playlists = getStoredPlaylists();
             grid.innerHTML = '';
-            if(!currentUser || !currentUser.playlists) return;
 
-            Object.keys(currentUser.playlists).forEach(name => {
+            if (Object.keys(playlists).length === 0) {
+                grid.innerHTML = '<div style="color:#666; padding:10px;">Empty. Search and add songs!</div>';
+                return;
+            }
+
+            Object.keys(playlists).forEach(name => {
                 const el = document.createElement('div');
                 el.className = 'dial-card user-dial';
                 el.innerHTML = `<i class="material-icons" style="margin-right:10px">queue_music</i> ${name}`;
                 el.onclick = () => openPlaylist(name);
-                // Right click delete playlist
                 el.oncontextmenu = (e) => {
                     e.preventDefault();
                     if(confirm(`Delete playlist "${name}"?`)) {
-                        delete currentUser.playlists[name];
-                        saveUserData();
+                        delete playlists[name];
+                        saveStoredPlaylists(playlists);
                     }
                 };
                 grid.appendChild(el);
@@ -272,11 +328,11 @@
         }
 
         function openPlaylist(name) {
-            // Hide Home elements
+            const playlists = getStoredPlaylists();
+            
             document.getElementById('speedDial').style.display = 'none';
             document.getElementById('librarySection').style.display = 'none';
             
-            // Show Header
             const titleDiv = document.getElementById('resultsTitle');
             titleDiv.style.display = 'block';
             titleDiv.innerHTML = `
@@ -288,22 +344,23 @@
             const grid = document.getElementById('results');
             grid.innerHTML = '';
 
-            currentUser.playlists[name].forEach(song => {
-                const el = document.createElement('div');
-                el.className = 'card';
-                el.onclick = () => playSong(song);
+            if(playlists[name]) {
+                playlists[name].forEach(song => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.onclick = () => playSong(song);
 
-                // Delete Button (Red Trash)
-                const btn = document.createElement('button');
-                btn.className = 'action-btn delete-btn';
-                btn.innerHTML = '<i class="material-icons">delete</i>';
-                btn.style.background = 'rgba(200, 0, 0, 0.8)';
-                btn.onclick = (e) => { e.stopPropagation(); removeFromPlaylist(name, song.id); };
+                    const btn = document.createElement('button');
+                    btn.className = 'action-btn delete-btn';
+                    btn.innerHTML = '<i class="material-icons">delete</i>';
+                    btn.style.background = 'rgba(200, 0, 0, 0.8)';
+                    btn.onclick = (e) => { e.stopPropagation(); removeFromPlaylist(name, song.id); };
 
-                el.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
-                el.appendChild(btn);
-                grid.appendChild(el);
-            });
+                    el.innerHTML = `<img src="${song.cover}"><h3>${song.title}</h3><p>${song.artist}</p>`;
+                    el.appendChild(btn);
+                    grid.appendChild(el);
+                });
+            }
         }
 
         function logout() { location.reload(); }
@@ -311,8 +368,9 @@
         // --- YOUTUBE PLAYER ---
         var player;
         window.onload = function() {
+            renderLibrary(); // Load local storage immediately
             google.accounts.id.initialize({ 
-                client_id: "1008834040580-n0hmhrtr6cmho2prg3i992hq5l77lpd7.apps.googleusercontent.com", // Put your real Client ID here if needed
+                client_id: "1008834040580-n0hmhrtr6cmho2prg3i992hq5l77lpd7.apps.googleusercontent.com", 
                 callback: handleCredentialResponse 
             });
             google.accounts.id.renderButton(document.getElementById("googleBtn"), { theme: "filled_black", size: "medium", shape: "pill" });
