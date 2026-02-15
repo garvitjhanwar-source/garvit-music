@@ -1,7 +1,7 @@
 {
   "name": "garvit-music",
-  "version": "1.0.0",
-  "description": "Music Player",
+  "version": "2.0.0",
+  "description": "Ultimate Music Player",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

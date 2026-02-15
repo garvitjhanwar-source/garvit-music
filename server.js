@@ -1,12 +1,14 @@
 const express = require('express');
-const YouTube = require('youtube-sr').default; // The new searching tool
+const YouTube = require('youtube-sr').default;
 const path = require('path');
 const cors = require('cors');
 const app = express();
 
-app.use(express.static('public'));
+// Enable security and static files
 app.use(cors());
+app.use(express.static('public'));
 
+// --- SEARCH ENDPOINT ---
 app.get('/search', async (req, res) => {
     const query = req.query.q;
     if (!query) return res.status(400).json({ error: "No query provided" });
@@ -14,21 +16,21 @@ app.get('/search', async (req, res) => {
     console.log(`[Server] Searching for: "${query}"`);
 
     try {
-        // 1. Search YouTube directly using the library
+        // Search using the library (Bypasses API blocks)
         const videos = await YouTube.search(query, { 
-            limit: 10, 
+            limit: 12, 
             type: 'video',
             safeSearch: false 
         });
 
         if (!videos || videos.length === 0) {
-             console.log("No results found.");
              return res.status(404).json({ error: "No results found" });
         }
 
-        // 2. Convert the data to match what your frontend expects
+        // Format data for the frontend
         const formattedResults = videos.map(video => ({
-            url: `https://www.youtube.com/watch?v=${video.id}`, // Frontend needs this format
+            id: video.id,
+            url: `https://www.youtube.com/watch?v=${video.id}`,
             title: video.title,
             uploaderName: video.channel ? video.channel.name : "Unknown Artist",
             thumbnail: video.thumbnail ? video.thumbnail.url : ""
@@ -43,7 +45,7 @@ app.get('/search', async (req, res) => {
     }
 });
 
-// Handle all other requests
+// Serve the frontend for all other requests
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
