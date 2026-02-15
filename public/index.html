@@ -317,12 +317,35 @@
                 el.innerHTML = `<i class="material-icons" style="margin-right:10px">queue_music</i> ${name}`;
                 el.onclick = () => openPlaylist(name);
                 el.oncontextmenu = (e) => {
-                    e.preventDefault();
-                    if(confirm(`Delete playlist "${name}"?`)) {
-                        delete playlists[name];
-                        saveStoredPlaylists(playlists);
-                    }
-                };
+    e.preventDefault(); // Stop normal right-click menu
+    
+    // 1. Ask User what to do
+    const action = prompt(`Manage Playlist: "${name}"\n\nType 'rename' to change name.\nType 'delete' to remove.`, "rename");
+    
+    if (action === 'delete') {
+        // DELETE LOGIC
+        if(confirm(`Are you sure you want to delete "${name}"?`)) {
+            delete playlists[name];
+            saveStoredPlaylists(playlists);
+        }
+    } 
+    else if (action === 'rename') {
+        // RENAME LOGIC
+        const newName = prompt("Enter new name:", name);
+        if (newName && newName !== name) {
+            if (playlists[newName]) {
+                alert("A playlist with that name already exists!");
+            } else {
+                // Copy songs to new name
+                playlists[newName] = playlists[name];
+                // Delete old name
+                delete playlists[name];
+                saveStoredPlaylists(playlists);
+                alert(`Renamed to "${newName}"`);
+            }
+        }
+    }
+};
                 grid.appendChild(el);
             });
         }
