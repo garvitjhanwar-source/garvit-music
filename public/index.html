@@ -63,27 +63,31 @@
         .action-btn:hover { background: #ff0000; border-color: #ff0000; transform: scale(1.1); }
         .delete-btn:hover { background: #D50000 !important; }
 
-        /* --- PLAYER BAR & VISUALIZER --- */
+        /* --- PLAYER BAR & VISUALIZER (UPDATED FAST VERSION) --- */
         .player-bar { position: fixed; bottom: 0; width: 100%; height: 80px; background: #212121; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box; justify-content: space-between; z-index: 100; }
         .song-info { display: flex; align-items: center; width: 30%; position: relative; }
         .song-info img { width: 50px; height: 50px; margin-right: 15px; background: #333; border-radius: 4px; z-index: 2; }
         
         /* Visualizer Styles */
-        .music-waves { display: flex; align-items: flex-end; height: 30px; gap: 3px; margin-left: 10px; opacity: 0; transition: opacity 0.3s; }
+        .music-waves { display: flex; align-items: flex-end; height: 30px; gap: 3px; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
         .music-waves.active { opacity: 1; }
         .bar { width: 4px; background: #ff0000; border-radius: 2px; height: 2px; }
         
-        /* Animations */
-        .music-waves.active .bar { animation: wave 1s ease-in-out infinite; }
-        .music-waves.active .bar:nth-child(1) { animation-duration: 0.6s; }
-        .music-waves.active .bar:nth-child(2) { animation-duration: 0.8s; }
-        .music-waves.active .bar:nth-child(3) { animation-duration: 0.5s; }
-        .music-waves.active .bar:nth-child(4) { animation-duration: 0.7s; }
+        /* Faster Animations */
+        .music-waves.active .bar { animation: wave 0.5s linear infinite; }
+        
+        /* Randomized speeds for a "beat" effect */
+        .music-waves.active .bar:nth-child(1) { animation-duration: 0.3s; animation-delay: 0s; }
+        .music-waves.active .bar:nth-child(2) { animation-duration: 0.45s; animation-delay: 0.1s; }
+        .music-waves.active .bar:nth-child(3) { animation-duration: 0.25s; animation-delay: 0.2s; }
+        .music-waves.active .bar:nth-child(4) { animation-duration: 0.35s; animation-delay: 0.05s; }
 
         @keyframes wave {
-            0% { height: 2px; opacity: 0.5; }
-            50% { height: 25px; opacity: 1; }
-            100% { height: 2px; opacity: 0.5; }
+            0% { height: 2px; opacity: 0.3; }
+            20% { height: 28px; opacity: 1; }  /* Jump up fast */
+            40% { height: 10px; opacity: 0.8; } /* Dip */
+            60% { height: 20px; opacity: 1; }   /* Jump again */
+            100% { height: 2px; opacity: 0.3; }
         }
 
         .info-text h3 { font-size: 14px; margin: 0; margin-bottom: 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 200px; }
@@ -405,7 +409,7 @@
             player = new YT.Player('hidden-player', { height: '180', width: '320', events: { 'onStateChange': onPlayerStateChange } }); 
         }
 
-        // UPDATED: Controls Visualizer Animation
+        // Logic to toggle visualizer
         function onPlayerStateChange(event) {
             const icon = document.getElementById('playIcon');
             const waves = document.getElementById('waves');
